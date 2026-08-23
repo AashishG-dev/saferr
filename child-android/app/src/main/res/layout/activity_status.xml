@@ -28,10 +28,23 @@
         android:textSize="14sp" />
 
     <Button
+        android:id="@+id/btnFixAccessibility"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="#F59E0B"
+        android:padding="14dp"
+        android:text="⚠️ Enable Silent Shield (Accessibility)"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <Button
         android:id="@+id/btnSos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:backgroundTint="#EF4444"
         android:padding="16dp"
         android:text="🚨 EMERGENCY SOS ALERT"
