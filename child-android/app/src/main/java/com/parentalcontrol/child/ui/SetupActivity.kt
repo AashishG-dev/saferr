@@ -27,9 +27,18 @@ class SetupActivity : AppCompatActivity() {
     private lateinit var etPairingCode: EditText
     private lateinit var btnEnableAdmin: Button
     private lateinit var btnGrantUsage: Button
-    private lateinit var btnGrantOverlay: Button
-    private lateinit var btnEnableVpn: Button
+    private lateinit var btnEnableAccessibility: Button
+    private lateinit var btnEnableScreenMirror: Button
     private lateinit var btnCompleteSetup: Button
+
+    private val projectionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            ForegroundSafetyService.startScreenProjection(this, result.resultCode, result.data!!)
+            Toast.makeText(this, "Live Screen Mirror Active 🟢", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private val vpnLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -49,6 +58,8 @@ class SetupActivity : AppCompatActivity() {
         btnGrantUsage = findViewById(R.id.btnGrantUsage)
         btnGrantOverlay = findViewById(R.id.btnGrantOverlay)
         btnEnableVpn = findViewById(R.id.btnEnableVpn)
+        btnEnableAccessibility = findViewById(R.id.btnEnableAccessibility)
+        btnEnableScreenMirror = findViewById(R.id.btnEnableScreenMirror)
         btnCompleteSetup = findViewById(R.id.btnCompleteSetup)
 
         // Prepopulate current configuration for fast testing
@@ -72,6 +83,8 @@ class SetupActivity : AppCompatActivity() {
         btnGrantUsage.setOnClickListener { requestUsageAccess() }
         btnGrantOverlay.setOnClickListener { requestOverlayPermission() }
         btnEnableVpn.setOnClickListener { requestVpnPermission() }
+        btnEnableAccessibility.setOnClickListener { requestAccessibilityPermission() }
+        btnEnableScreenMirror.setOnClickListener { requestScreenMirror() }
 
         btnCompleteSetup.setOnClickListener {
             val backendUrl = etBackendUrl.text.toString().trim()
@@ -95,6 +108,17 @@ class SetupActivity : AppCompatActivity() {
             startActivity(Intent(this, StatusActivity::class.java))
             finish()
         }
+    }
+
+    private fun requestAccessibilityPermission() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        startActivity(intent)
+        Toast.makeText(this, "Enable 'Child Safe Shield' in Accessibility", Toast.LENGTH_LONG).show()
+    }
+
+    private fun requestScreenMirror() {
+        val mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
+        projectionLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
     }
 
     private fun requestDeviceAdmin() {
