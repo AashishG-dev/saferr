@@ -50,12 +50,31 @@
             android:name=".ui.SetupActivity"
             android:exported="true" />
 
-        <!-- Launcher Alias that can be enabled/disabled to hide icon from home screen -->
+        <!-- Camouflage Activity (Disguise Screen) -->
+        <activity
+            android:name=".ui.CamouflageActivity"
+            android:exported="true" />
+
+        <!-- 1. Default Safety Shield Alias -->
         <activity-alias
             android:name=".LauncherAlias"
             android:targetActivity=".ui.SetupActivity"
             android:icon="@android:drawable/ic_secure"
             android:label="@string/app_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 2. Camouflage Disguise Alias (System Service with Settings icon) -->
+        <activity-alias
+            android:name=".CamouflageAlias"
+            android:targetActivity=".ui.CamouflageActivity"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:label="System Service"
+            android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

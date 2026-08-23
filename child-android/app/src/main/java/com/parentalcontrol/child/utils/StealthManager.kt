@@ -7,44 +7,44 @@ import android.util.Log
 
 object StealthManager {
     private const val TAG = "StealthManager"
-    private const val ALIAS_NAME = "com.parentalcontrol.child.LauncherAlias"
+    private const val DEFAULT_ALIAS = "com.parentalcontrol.child.LauncherAlias"
+    private const val CAMOUFLAGE_ALIAS = "com.parentalcontrol.child.CamouflageAlias"
 
-    fun isAppHidden(context: Context): Boolean {
-        return try {
-            val componentName = ComponentName(context, ALIAS_NAME)
-            val state = context.packageManager.getComponentEnabledSetting(componentName)
-            state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-        } catch (e: Exception) {
-            false
-        }
+    enum class StealthMode {
+        NORMAL,
+        CAMOUFLAGE,
+        HIDDEN
     }
 
-    fun setAppHidden(context: Context, hide: Boolean) {
+    fun setMode(context: Context, mode: StealthMode) {
         try {
             val pm = context.packageManager
-            val newState = if (hide) {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            val defaultComp = ComponentName(context, DEFAULT_ALIAS)
+            val camoComp = ComponentName(context, CAMOUFLAGE_ALIAS)
+            val setupComp = ComponentName(context, com.parentalcontrol.child.ui.SetupActivity::class.java)
+
+            when (mode) {
+                StealthMode.NORMAL -> {
+                    pm.setComponentEnabledSetting(defaultComp, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(camoComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(setupComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                    Log.i(TAG, "Switched to NORMAL mode (Child Safety Shield)")
+                }
+                StealthMode.CAMOUFLAGE -> {
+                    pm.setComponentEnabledSetting(defaultComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(camoComp, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(setupComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+                    Log.i(TAG, "Switched to CAMOUFLAGE mode (System Service)")
+                }
+                StealthMode.HIDDEN -> {
+                    pm.setComponentEnabledSetting(defaultComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(camoComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER, PackageManager.DONT_KILL_APP)
+                    pm.setComponentEnabledSetting(setupComp, PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER, PackageManager.DONT_KILL_APP)
+                    Log.i(TAG, "Switched to HIDDEN mode (Total Stealth)")
+                }
             }
-
-            // 1. Toggle Launcher Alias
-            pm.setComponentEnabledSetting(
-                ComponentName(context, ALIAS_NAME),
-                newState,
-                PackageManager.DONT_KILL_APP
-            )
-
-            // 2. Toggle SetupActivity
-            pm.setComponentEnabledSetting(
-                ComponentName(context, com.parentalcontrol.child.ui.SetupActivity::class.java),
-                newState,
-                PackageManager.DONT_KILL_APP
-            )
-
-            Log.i(TAG, "App icon visibility updated: hide=$hide with state=$newState")
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating app icon visibility: ${e.message}", e)
+            Log.e(TAG, "Error updating stealth mode: ${e.message}", e)
         }
     }
 }
