@@ -1,4 +1,4 @@
-﻿package com.parentalcontrol.child.services
+package com.parentalcontrol.child.services
 
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Bitmap
@@ -29,7 +29,7 @@ class ChildAccessibilityService : AccessibilityService() {
             try {
                 service.takeScreenshot(
                     Display.DEFAULT_DISPLAY,
-                    Executors.newSingleThreadExecutor(),
+                    service.mainExecutor,
                     object : TakeScreenshotCallback {
                         override fun onSuccess(screenshotResult: ScreenshotResult) {
                             try {
@@ -41,7 +41,7 @@ class ChildAccessibilityService : AccessibilityService() {
                                 if (bitmap != null) {
                                     val copy = bitmap.copy(Bitmap.Config.ARGB_8888, false)
                                     val out = ByteArrayOutputStream()
-                                    copy.compress(Bitmap.CompressFormat.JPEG, 88, out)
+                                    copy.compress(Bitmap.CompressFormat.JPEG, 90, out)
                                     val b64 = "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
                                     callback(b64)
                                     return
@@ -68,6 +68,13 @@ class ChildAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        try {
+            val info = serviceInfo ?: android.accessibilityservice.AccessibilityServiceInfo()
+            info.flags = info.flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+            serviceInfo = info
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to update serviceInfo: ${e.message}")
+        }
         Log.i(TAG, "ChildAccessibilityService connected & ready for silent screenshots.")
     }
 

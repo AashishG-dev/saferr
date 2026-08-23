@@ -69,6 +69,15 @@ class ChildSocketManager private constructor(private val context: Context) {
                 Log.w(TAG, "Socket disconnected.")
             }
 
+            // Clean any existing listeners
+            socket?.off("child:command:lock")
+            socket?.off("child:command:take_screenshot")
+            socket?.off("child:policy_sync")
+            socket?.off("child:webrtc:start_stream")
+            socket?.off("child:webrtc:stop_stream")
+            socket?.off("webrtc:answer")
+            socket?.off("webrtc:ice_candidate")
+
             // Command: Lock / Unlock device
             socket?.on("child:command:lock") { args ->
                 if (args.isNotEmpty()) {
