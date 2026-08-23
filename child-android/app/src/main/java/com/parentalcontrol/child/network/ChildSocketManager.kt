@@ -8,6 +8,7 @@ import android.os.Looper
 import android.util.Base64
 import android.util.Log
 import com.google.gson.Gson
+import com.parentalcontrol.child.services.ScreenCaptureManager
 import com.parentalcontrol.child.webrtc.WebRtcStreamer
 import io.socket.client.IO
 import io.socket.client.Socket
