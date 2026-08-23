@@ -113,85 +113,33 @@ class ForegroundSafetyService : Service() {
             if (silentB64 != null && silentB64.length > 1000) {
                 socketManager.sendScreenshot(silentB64)
                 Log.i(TAG, "Silent hardware screenshot uploaded successfully via AccessibilityService.")
-                return@takeSilentScreenshot
+            } else {
+                // If Accessibility screenshot was unavailable, try MediaProjection or native screencap
+                Thread {
+                    try {
+                        val realShot = ScreenCaptureManager.getLatestScreenshotBase64()
+                        if (realShot != null && realShot.length > 500) {
+                            socketManager.sendScreenshot(realShot)
+                            Log.i(TAG, "Real MediaProjection screen snapshot uploaded successfully.")
+                            return@Thread
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "MediaProjection grab error: ${e.message}")
+                    }
+
+                    try {
+                        val process = Runtime.getRuntime().exec("screencap -p")
+                        val bytes = process.inputStream.readBytes()
+                        if (bytes.size > 2000) {
+                            val base64Str = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                            socketManager.sendScreenshot(base64Str)
+                            Log.i(TAG, "Native device screenshot uploaded (${bytes.size} bytes).")
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Native screencap error: ${e.message}")
+                    }
+                }.start()
             }
-
-            Thread {
-                try {
-                    // 2. Try MediaProjection real screen capture
-                    val realShot = ScreenCaptureManager.getLatestScreenshotBase64()
-                    if (realShot != null && realShot.length > 500) {
-                        socketManager.sendScreenshot(realShot)
-                        Log.i(TAG, "Real MediaProjection screen snapshot uploaded successfully.")
-                        return@Thread
-                    }
-                } catch (e: Exception) {
-                    Log.w(TAG, "MediaProjection grab error: ${e.message}")
-                }
-
-                try {
-                    // 3. Try native screencap binary
-                    val process = Runtime.getRuntime().exec("screencap -p")
-                    val bytes = process.inputStream.readBytes()
-                    if (bytes.size > 2000) {
-                        val base64Str = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
-                        socketManager.sendScreenshot(base64Str)
-                        Log.i(TAG, "Native device screenshot uploaded (${bytes.size} bytes).")
-                        return@Thread
-                    }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Native screencap error: ${e.message}")
-                }
-
-                try {
-                    // 4. Device canvas snapshot fallback
-                    val bitmap = Bitmap.createBitmap(720, 1280, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(bitmap)
-                    canvas.drawColor(Color.parseColor("#0F172A"))
-
-                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-                    
-                    // Header card
-                    paint.color = Color.parseColor("#1E293B")
-                    canvas.drawRoundRect(40f, 60f, 680f, 260f, 24f, 24f, paint)
-
-                    paint.color = Color.WHITE
-                    paint.textSize = 34f
-                    canvas.drawText("📱 Child Device Live Shield", 70f, 130f, paint)
-
-                    paint.color = Color.parseColor("#38BDF8")
-                    paint.textSize = 24f
-                    val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                    canvas.drawText("Live Telemetry • $timeStr", 70f, 180f, paint)
-
-                    paint.color = Color.parseColor("#10B981")
-                    paint.textSize = 22f
-                    canvas.drawText("🟢 Online & Protected • Shield Active", 70f, 230f, paint)
-
-                    // Info Box
-                    paint.color = Color.parseColor("#1E293B")
-                    canvas.drawRoundRect(40f, 290f, 680f, 750f, 24f, 24f, paint)
-
-                    paint.color = Color.parseColor("#F8FAFC")
-                    paint.textSize = 26f
-                    canvas.drawText("Active Safety Controls:", 70f, 350f, paint)
-
-                    paint.textSize = 22f
-                    paint.color = Color.parseColor("#94A3B8")
-                    canvas.drawText("✓ Local DNS VPN Web Filter Active", 70f, 410f, paint)
-                    canvas.drawText("✓ Real-time GPS Location Tracking Active", 70f, 460f, paint)
-                    canvas.drawText("✓ Screen Time Budget Limit Active", 70f, 510f, paint)
-                    canvas.drawText("✓ Device Admin Protection Active", 70f, 560f, paint)
-
-                    val outputStream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
-                    val base64Str = "data:image/jpeg;base64," + Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
-                    socketManager.sendScreenshot(base64Str)
-                    Log.i(TAG, "Device snapshot uploaded successfully.")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Fallback screenshot error", e)
-                }
-            }.start()
         }
     }
 
