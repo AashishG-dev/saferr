@@ -9,8 +9,18 @@ import {
   SafetyAlert
 } from '../types';
 
-export const API_BASE = 'http://localhost:4000/api';
-export const SOCKET_URL = 'http://localhost:4000';
+const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
+export const SOCKET_URL =
+  (import.meta.env.VITE_SOCKET_URL as string) ||
+  (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '10.0.2.2'
+    ? 'http://localhost:4000'
+    : hostname.includes('portal.')
+    ? `https://${hostname.replace('portal.', 'api.')}`
+    : `${window.location.origin}`);
+
+export const API_BASE = `${SOCKET_URL}/api`;
 
 let socket: Socket | null = null;
 
