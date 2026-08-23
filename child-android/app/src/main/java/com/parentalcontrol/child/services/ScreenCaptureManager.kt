@@ -40,9 +40,9 @@ object ScreenCaptureManager {
             val metrics = DisplayMetrics()
             windowManager.defaultDisplay.getRealMetrics(metrics)
 
-            // Scaled down resolution for high performance and low bandwidth
-            screenWidth = 540
-            screenHeight = (540 * (metrics.heightPixels.toFloat() / metrics.widthPixels.toFloat())).toInt()
+            // Full native HD resolution for crystal clear screenshots and text
+            screenWidth = metrics.widthPixels
+            screenHeight = metrics.heightPixels
             screenDensity = metrics.densityDpi
 
             @SuppressLint("WrongConstant")
@@ -68,7 +68,7 @@ object ScreenCaptureManager {
                         bmp.copyPixelsFromBuffer(buffer)
                         val cropped = Bitmap.createBitmap(bmp, 0, 0, screenWidth, screenHeight)
                         val out = ByteArrayOutputStream()
-                        cropped.compress(Bitmap.CompressFormat.JPEG, 75, out)
+                        cropped.compress(Bitmap.CompressFormat.JPEG, 88, out)
                         latestFrameBase64 = "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
                     }
                 } catch (e: Exception) {
