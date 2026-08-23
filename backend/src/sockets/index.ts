@@ -166,31 +166,10 @@ function captureRealDeviceScreen(): Promise<string | null> {
 }
 
     // Command: Take Instant Screenshot
-    socket.on('parent:command:take_screenshot', async (data: { deviceId: string }) => {
+    socket.on('parent:command:take_screenshot', (data: { deviceId: string }) => {
       const targetId = store.getDeviceById(data.deviceId)?.id || data.deviceId;
       console.log(`[Command] Requesting screenshot from child: ${data.deviceId} -> target: ${targetId}`);
       emitToChild(data.deviceId, 'child:command:take_screenshot');
-
-      // Capture pixel-perfect screen from real device / simulator via ADB
-      try {
-        const realScreenBase64 = await captureRealDeviceScreen();
-        if (realScreenBase64) {
-          const realShot = {
-            id: uuidv4(),
-            deviceId: targetId,
-            imageUrl: realScreenBase64,
-            timestamp: new Date().toISOString(),
-            triggeredBy: 'manual' as const
-          };
-          store.addScreenshot(realShot);
-          io.to(`parent:${targetId}`).emit('parent:screenshot_received', realShot);
-          io.to(`parent:${data.deviceId}`).emit('parent:screenshot_received', realShot);
-          io.emit('parent:screenshot_received', realShot);
-          console.log(`[Real Screen Captured] Saved and emitted real screenshot for ${targetId}`);
-        }
-      } catch (err) {
-        console.error('Error capturing real screen:', err);
-      }
     });
 
     // Command: Policy Updated

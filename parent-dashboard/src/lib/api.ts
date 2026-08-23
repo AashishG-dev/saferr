@@ -109,6 +109,18 @@ export const api = {
     return json.data;
   },
 
+  async deleteScreenshot(id: string): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/screenshots/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    return json.success;
+  },
+
+  async deleteAllScreenshots(deviceId: string): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/screenshots?deviceId=${deviceId}`, { method: 'DELETE' });
+    const json = await res.json();
+    return json.success;
+  },
+
   // Alerts
   async getAlerts(deviceId?: string): Promise<SafetyAlert[]> {
     const url = deviceId ? `${API_BASE}/alerts?deviceId=${deviceId}` : `${API_BASE}/alerts`;

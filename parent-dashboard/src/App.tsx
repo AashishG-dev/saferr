@@ -167,6 +167,7 @@ export function App() {
   };
 
   // Request Remote Screenshot
+  // Request Remote Screenshot
   const handleRequestScreenshot = async () => {
     if (!selectedDevice) return;
     socket.emit('parent:command:take_screenshot', { deviceId: selectedDevice.id });
@@ -181,7 +182,28 @@ export function App() {
       } catch (e) {
         console.error('Failed to reload screenshots:', e);
       }
-    }, 800);
+    }, 1200);
+  };
+
+  // Delete Individual Screenshot
+  const handleDeleteScreenshot = async (id: string) => {
+    try {
+      await api.deleteScreenshot(id);
+      setScreenshots((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      console.error('Failed to delete screenshot:', e);
+    }
+  };
+
+  // Delete All Screenshots
+  const handleDeleteAllScreenshots = async () => {
+    if (!selectedDevice) return;
+    try {
+      await api.deleteAllScreenshots(selectedDevice.id);
+      setScreenshots([]);
+    } catch (e) {
+      console.error('Failed to delete all screenshots:', e);
+    }
   };
 
   if (!selectedDevice) {
@@ -262,6 +284,8 @@ export function App() {
             socket={socket}
             screenshots={screenshots}
             onRequestScreenshot={handleRequestScreenshot}
+            onDeleteScreenshot={handleDeleteScreenshot}
+            onDeleteAllScreenshots={handleDeleteAllScreenshots}
           />
         )}
       </main>

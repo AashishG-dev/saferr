@@ -11,7 +11,10 @@ import {
   Eye,
   Volume2,
   VolumeX,
-  Maximize2
+  Trash2,
+  CheckSquare,
+  Square as CheckboxBlank,
+  X
 } from 'lucide-react';
 import { Socket } from 'socket.io-client';
 import { RemoteScreenshot } from '../types';
@@ -21,13 +24,17 @@ interface LiveMonitorViewProps {
   socket: Socket;
   screenshots: RemoteScreenshot[];
   onRequestScreenshot: () => void;
+  onDeleteScreenshot: (id: string) => Promise<void>;
+  onDeleteAllScreenshots: () => Promise<void>;
 }
 
 export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
   deviceId,
   socket,
   screenshots,
-  onRequestScreenshot
+  onRequestScreenshot,
+  onDeleteScreenshot,
+  onDeleteAllScreenshots
 }) => {
   const [activeMediaType, setActiveMediaType] = useState<'screen' | 'camera_front' | 'camera_back' | 'mic' | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -35,10 +42,48 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
   const [selectedScreenshot, setSelectedScreenshot] = useState<RemoteScreenshot | null>(null);
   const [streamStatus, setStreamStatus] = useState<string>('Ready');
   const [latestLiveFrame, setLatestLiveFrame] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSelectMode, setIsSelectMode] = useState(false);
 
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+
+  const toggleSelect = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === screenshots.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(screenshots.map((s) => s.id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Delete ${selectedIds.size} selected screenshot(s)?`)) return;
+    for (const id of Array.from(selectedIds)) {
+      await onDeleteScreenshot(id);
+    }
+    setSelectedIds(new Set());
+    setIsSelectMode(false);
+  };
+
+  const handleDeleteAll = async () => {
+    if (screenshots.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ALL ${screenshots.length} screenshots?`)) return;
+    await onDeleteAllScreenshots();
+    setSelectedIds(new Set());
+    setIsSelectMode(false);
+  };
 
   // WebRTC Setup
   const startWebRtcStream = (mediaType: 'screen' | 'camera_front' | 'camera_back' | 'mic') => {
@@ -286,10 +331,57 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
               <ImageIcon className="w-4 h-4 text-amber-400" />
               Screenshot Gallery
             </h3>
-            <span className="text-xs text-slate-400 font-mono">
-              {screenshots.length} Captured
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-mono">
+                {screenshots.length} Captured
+              </span>
+              {screenshots.length > 0 && (
+                <button
+                  onClick={() => setIsSelectMode(!isSelectMode)}
+                  className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+                    isSelectMode ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  {isSelectMode ? 'Cancel' : 'Select'}
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Action Toolbar for Selection / Delete All */}
+          {screenshots.length > 0 && (
+            <div className="flex items-center justify-between gap-2 p-2 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+              {isSelectMode ? (
+                <>
+                  <button
+                    onClick={selectAll}
+                    className="text-slate-300 hover:text-white flex items-center gap-1.5"
+                  >
+                    {selectedIds.size === screenshots.length ? (
+                      <CheckSquare className="w-3.5 h-3.5 text-amber-400" />
+                    ) : (
+                      <CheckboxBlank className="w-3.5 h-3.5" />
+                    )}
+                    {selectedIds.size === screenshots.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <button
+                    onClick={handleDeleteSelected}
+                    disabled={selectedIds.size === 0}
+                    className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 rounded-lg flex items-center gap-1 text-[11px] font-semibold disabled:opacity-50 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete ({selectedIds.size})
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleDeleteAll}
+                  className="w-full py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete All Screenshots
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto space-y-3 max-h-[500px] pr-1">
             {screenshots.length === 0 ? (
@@ -297,27 +389,59 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
                 No screenshots captured yet. Click "Capture Remote Screenshot" above.
               </div>
             ) : (
-              screenshots.map((shot) => (
-                <div
-                  key={shot.id}
-                  onClick={() => setSelectedScreenshot(shot)}
-                  className="group relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden cursor-pointer hover:border-amber-500/50 transition-all"
-                >
-                  <div className="aspect-[16/9] w-full bg-slate-950 overflow-hidden flex items-center justify-center">
-                    <img
-                      src={shot.imageUrl}
-                      alt="Remote Screenshot"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
+              screenshots.map((shot) => {
+                const isSelected = selectedIds.has(shot.id);
+                return (
+                  <div
+                    key={shot.id}
+                    onClick={() => (isSelectMode ? toggleSelect(shot.id, { stopPropagation: () => {} } as any) : setSelectedScreenshot(shot))}
+                    className={`group relative bg-slate-950 border rounded-xl overflow-hidden cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-amber-500 ring-2 ring-amber-500/30'
+                        : 'border-slate-800 hover:border-amber-500/50'
+                    }`}
+                  >
+                    {isSelectMode && (
+                      <div
+                        onClick={(e) => toggleSelect(shot.id, e)}
+                        className="absolute top-2 left-2 z-10 p-1 bg-slate-900/90 rounded-md border border-slate-700 text-amber-400"
+                      >
+                        {isSelected ? <CheckSquare className="w-4 h-4" /> : <CheckboxBlank className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    )}
+                    
+                    {/* Hover delete button */}
+                    {!isSelectMode && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Delete this screenshot?')) {
+                            await onDeleteScreenshot(shot.id);
+                          }
+                        }}
+                        className="absolute top-2 right-2 z-10 p-1.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-lg border border-rose-700/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg"
+                        title="Delete Screenshot"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    <div className="aspect-[16/9] w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                      <img
+                        src={shot.imageUrl}
+                        alt="Remote Screenshot"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <div className="p-2.5 bg-slate-900/90 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-300 font-mono">{new Date(shot.timestamp).toLocaleTimeString()}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 capitalize">
+                        {shot.triggeredBy}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2.5 bg-slate-900/90 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-300 font-mono">{new Date(shot.timestamp).toLocaleTimeString()}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 capitalize">
-                      {shot.triggeredBy}
-                    </span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -330,10 +454,32 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
           onClick={() => setSelectedScreenshot(null)}
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
         >
-          <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-4 space-y-3">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-4 space-y-3"
+          >
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-white">Screenshot Detail</span>
-              <span className="text-slate-400">{new Date(selectedScreenshot.timestamp).toLocaleString()}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-slate-400 font-mono">{new Date(selectedScreenshot.timestamp).toLocaleString()}</span>
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Delete this screenshot?')) {
+                      await onDeleteScreenshot(selectedScreenshot.id);
+                      setSelectedScreenshot(null);
+                    }
+                  }}
+                  className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg flex items-center gap-1 text-[11px] font-semibold border border-rose-500/30 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </button>
+                <button
+                  onClick={() => setSelectedScreenshot(null)}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className="max-h-[70vh] overflow-hidden rounded-xl bg-slate-950 flex items-center justify-center">
               <img
@@ -342,7 +488,7 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
                 className="max-h-[70vh] w-auto object-contain"
               />
             </div>
-            <p className="text-[11px] text-slate-500 text-center">Click anywhere to close</p>
+            <p className="text-[11px] text-slate-500 text-center">Click outside or press X to close</p>
           </div>
         </div>
       )}

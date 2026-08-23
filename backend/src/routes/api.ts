@@ -9,10 +9,28 @@ apiRouter.get('/devices', (_req: Request, res: Response) => {
   res.json({ success: true, data: store.getDevices() });
 });
 
-apiRouter.get('/devices/:id', (req: Request, res: Response) => {
-  const device = store.getDeviceById(req.params.id);
-  if (!device) return res.status(404).json({ success: false, error: 'Device not found' });
-  res.json({ success: true, data: device });
+apiRouter.get('/screenshots', (req: Request, res: Response) => {
+  const deviceId = req.query.deviceId as string;
+  if (!deviceId) {
+    return res.status(400).json({ success: false, message: 'deviceId is required' });
+  }
+  const screenshots = store.getScreenshots(deviceId);
+  res.json({ success: true, data: screenshots });
+});
+
+apiRouter.delete('/screenshots/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const deleted = store.deleteScreenshot(id);
+  res.json({ success: deleted });
+});
+
+apiRouter.delete('/screenshots', (req: Request, res: Response) => {
+  const deviceId = req.query.deviceId as string;
+  if (!deviceId) {
+    return res.status(400).json({ success: false, message: 'deviceId is required' });
+  }
+  const deletedCount = store.deleteAllScreenshots(deviceId);
+  res.json({ success: true, count: deletedCount });
 });
 
 apiRouter.post('/devices/pair', (req: Request, res: Response) => {

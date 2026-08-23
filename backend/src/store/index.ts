@@ -245,6 +245,24 @@ class DataStore {
     return this.data.screenshots.filter((s) => s.deviceId === deviceId);
   }
 
+  deleteScreenshot(id: string): boolean {
+    const prevLen = this.data.screenshots.length;
+    this.data.screenshots = this.data.screenshots.filter((s) => s.id !== id);
+    if (this.data.screenshots.length !== prevLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  deleteAllScreenshots(deviceId: string): number {
+    const prevLen = this.data.screenshots.length;
+    this.data.screenshots = this.data.screenshots.filter((s) => s.deviceId !== deviceId);
+    const count = prevLen - this.data.screenshots.length;
+    this.save();
+    return count;
+  }
+
   // Alerts
   addAlert(alert: SafetyAlert) {
     this.data.alerts.unshift(alert);
