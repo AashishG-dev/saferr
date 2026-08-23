@@ -79,6 +79,12 @@ object ScreenCaptureManager {
                 }
             }, android.os.Handler(android.os.Looper.getMainLooper()))
 
+            mediaProjection?.registerCallback(object : MediaProjection.Callback() {
+                override fun onStop() {
+                    release()
+                }
+            }, android.os.Handler(android.os.Looper.getMainLooper()))
+
             virtualDisplay = mediaProjection?.createVirtualDisplay(
                 "FamilyShieldCapture",
                 screenWidth,
