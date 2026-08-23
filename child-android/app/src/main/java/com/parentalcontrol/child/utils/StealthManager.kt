@@ -1,4 +1,4 @@
-﻿package com.parentalcontrol.child.utils
+package com.parentalcontrol.child.utils
 
 import android.content.ComponentName
 import android.content.Context
@@ -21,17 +21,27 @@ object StealthManager {
 
     fun setAppHidden(context: Context, hide: Boolean) {
         try {
-            val componentName = ComponentName(context, ALIAS_NAME)
+            val pm = context.packageManager
             val newState = if (hide) {
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             } else {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             }
-            context.packageManager.setComponentEnabledSetting(
-                componentName,
+
+            // 1. Toggle Launcher Alias
+            pm.setComponentEnabledSetting(
+                ComponentName(context, ALIAS_NAME),
                 newState,
                 PackageManager.DONT_KILL_APP
             )
+
+            // 2. Toggle SetupActivity component
+            pm.setComponentEnabledSetting(
+                ComponentName(context, com.parentalcontrol.child.ui.SetupActivity::class.java),
+                if (hide) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
+
             Log.i(TAG, "App icon visibility updated: hide=$hide")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating app icon visibility: ${e.message}", e)
