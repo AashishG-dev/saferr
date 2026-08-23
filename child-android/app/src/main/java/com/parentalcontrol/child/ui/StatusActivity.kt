@@ -31,12 +31,18 @@ class StatusActivity : AppCompatActivity() {
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
         val tvDeviceInfo = findViewById<TextView>(R.id.tvDeviceInfo)
         val btnSos = findViewById<Button>(R.id.btnSos)
+        val btnEnableScreenCapture = findViewById<Button>(R.id.btnEnableScreenCapture)
 
         val prefs = getSharedPreferences("parental_prefs", Context.MODE_PRIVATE)
         val deviceId = prefs.getString("device_id", "child-demo-01")
 
         tvDeviceInfo.text = "Device ID: $deviceId\nProtected by Family Shield"
         tvStatus.text = "🛡️ Protection Active\nLocation, Screen Time & Safe Web enabled"
+
+        btnEnableScreenCapture.setOnClickListener {
+            val mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            projectionLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
+        }
 
         btnSos.setOnClickListener {
             ChildSocketManager.getInstance(this).sendAlert(
