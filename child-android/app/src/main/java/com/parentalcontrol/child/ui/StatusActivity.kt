@@ -19,7 +19,7 @@ class StatusActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK && result.data != null) {
-            ScreenCaptureManager.init(applicationContext, result.resultCode, result.data!!)
+            com.parentalcontrol.child.services.ForegroundSafetyService.startScreenProjection(this, result.resultCode, result.data!!)
             Toast.makeText(this, "Live Screen Shield Active 🟢", Toast.LENGTH_SHORT).show()
         }
     }

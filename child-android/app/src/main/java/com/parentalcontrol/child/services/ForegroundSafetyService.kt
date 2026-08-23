@@ -28,7 +28,8 @@ class ForegroundSafetyService : Service() {
 
     companion object {
         private const val TAG = "ForegroundSafetyService"
-        private const val NOTIFICATION_ID = 1001
+        private const val NOTIFICATION_ID = 9001
+        const val ACTION_START_PROJECTION = "com.parentalcontrol.child.action.START_PROJECTION"
 
         fun start(context: Context) {
             val intent = Intent(context, ForegroundSafetyService::class.java)
@@ -40,6 +41,19 @@ class ForegroundSafetyService : Service() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start service", e)
+            }
+        }
+
+        fun startScreenProjection(context: Context, resultCode: Int, data: Intent) {
+            val intent = Intent(context, ForegroundSafetyService::class.java).apply {
+                action = ACTION_START_PROJECTION
+                putExtra("resultCode", resultCode)
+                putExtra("resultData", data)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
             }
         }
     }
@@ -215,6 +229,19 @@ class ForegroundSafetyService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_START_PROJECTION) {
+            val resultCode = intent.getIntExtra("resultCode", -1)
+            val resultData = intent.getParcelableExtra<Intent>("resultData")
+            if (resultCode != -1 && resultData != null) {
+                try {
+                    startForegroundWithTransparentNotification()
+                    ScreenCaptureManager.init(this, resultCode, resultData)
+                    Log.i(TAG, "ScreenCaptureManager successfully initialized via ForegroundSafetyService!")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error starting ScreenCaptureManager in service", e)
+                }
+            }
+        }
         return START_STICKY
     }
 
