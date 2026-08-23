@@ -61,71 +61,7 @@ class DataStore {
   }
 
   private seedDefaultDeviceIfEmpty() {
-    if (this.data.devices.length === 0) {
-      const demoId = 'child-demo-01';
-      this.data.devices.push({
-        id: demoId,
-        name: "Alex's Galaxy A54",
-        pairingCode: '749201',
-        isPaired: true,
-        model: 'Samsung SM-A546B',
-        osVersion: 'Android 14 (API 34)',
-        batteryLevel: 82,
-        isCharging: false,
-        isLocked: false,
-        lastSeen: new Date().toISOString(),
-        status: 'online'
-      });
-
-      this.data.screenTimePolicies[demoId] = {
-        deviceId: demoId,
-        dailyLimitMinutes: 120,
-        bedtimeStart: '21:30',
-        bedtimeEnd: '07:00',
-        isLocked: false,
-        blockedApps: ['com.zhiliaoapp.musically', 'com.supercell.clashroyale'],
-        allowedAppTime: {
-          'com.google.android.youtube': 45,
-          'com.instagram.android': 30
-        }
-      };
-
-      this.data.webFilterPolicies[demoId] = {
-        deviceId: demoId,
-        enabled: true,
-        blockedCategories: ['adult', 'gambling', 'weapons'],
-        blockedDomains: ['tiktok.com', 'roblox.com', 'omegle.com'],
-        allowedDomains: ['wikipedia.org', 'khanacademy.org', 'google.com']
-      };
-
-      this.data.locations.push({
-        id: 'loc-001',
-        deviceId: demoId,
-        latitude: 37.7749,
-        longitude: -122.4194,
-        accuracy: 8.5,
-        timestamp: new Date().toISOString(),
-        address: 'San Francisco, CA'
-      });
-
-      this.data.appUsage.push(
-        { id: 'u1', deviceId: demoId, packageName: 'com.google.android.youtube', appName: 'YouTube', usageMinutes: 42, lastUsed: new Date().toISOString(), category: 'Entertainment' },
-        { id: 'u2', deviceId: demoId, packageName: 'com.instagram.android', appName: 'Instagram', usageMinutes: 28, lastUsed: new Date().toISOString(), category: 'Social' },
-        { id: 'u3', deviceId: demoId, packageName: 'com.whatsapp', appName: 'WhatsApp', usageMinutes: 19, lastUsed: new Date().toISOString(), category: 'Communication' },
-        { id: 'u4', deviceId: demoId, packageName: 'com.roblox.client', appName: 'Roblox', usageMinutes: 35, lastUsed: new Date().toISOString(), category: 'Games' }
-      );
-
-      this.data.alerts.push({
-        id: 'alt-1',
-        deviceId: demoId,
-        type: 'BLOCKED_SITE_ATTEMPT',
-        message: 'Attempted access to blocked site: omegle.com',
-        severity: 'medium',
-        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString()
-      });
-
-      this.save();
-    }
+    // Starts with a clean production database. New devices are registered upon pairing.
   }
 
   // Device Methods
