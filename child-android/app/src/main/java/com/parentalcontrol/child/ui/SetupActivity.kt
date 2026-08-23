@@ -27,6 +27,8 @@ class SetupActivity : AppCompatActivity() {
     private lateinit var etPairingCode: EditText
     private lateinit var btnEnableAdmin: Button
     private lateinit var btnGrantUsage: Button
+    private lateinit var btnGrantOverlay: Button
+    private lateinit var btnEnableVpn: Button
     private lateinit var btnEnableAccessibility: Button
     private lateinit var btnEnableScreenMirror: Button
     private lateinit var btnCompleteSetup: Button
