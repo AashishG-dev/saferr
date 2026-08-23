@@ -1,0 +1,24 @@
+# Cloudflare Tunnel Configuration (cloudflared config.yml)
+# Replace <TUNNEL_ID> with your Cloudflare Tunnel UUID
+# Replace <ACCOUNT_ID> or credentials path with your actual json path
+# Replace yourdomain.com with your active domain registered on Cloudflare
+
+tunnel: <TUNNEL_UUID_HERE>
+credentials-file: /root/.cloudflared/<TUNNEL_UUID_HERE>.json
+
+# Ingress rules route external traffic to your local services
+ingress:
+  # 1. Parent Web Dashboard (e.g. saferr.yourdomain.com or dashboard.yourdomain.com)
+  - hostname: saferr.yourdomain.com
+    service: http://localhost:3000
+
+  # 2. Backend REST API & WebSocket / WebRTC Signaling (e.g. api.yourdomain.com)
+  - hostname: api.yourdomain.com
+    service: http://localhost:4000
+    originRequest:
+      noTLSVerify: false
+      connectTimeout: 30s
+      # Cloudflare Tunnels automatically handle WebSocket upgrade connections!
+
+  # 3. Catch-all fallback rule (Required by Cloudflare)
+  - service: http_status:404

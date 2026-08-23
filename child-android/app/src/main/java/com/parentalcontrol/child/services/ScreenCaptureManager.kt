@@ -86,7 +86,7 @@ object ScreenCaptureManager {
             }, android.os.Handler(android.os.Looper.getMainLooper()))
 
             virtualDisplay = mediaProjection?.createVirtualDisplay(
-                "FamilyShieldCapture",
+                "SaferrCapture",
                 screenWidth,
                 screenHeight,
                 screenDensity,

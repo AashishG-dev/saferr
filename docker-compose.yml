@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Saferr Backend API & WebSocket Signaling Service
+  saferr-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saferr-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - CORS_ORIGIN=*
+      - NODE_ENV=production
+    volumes:
+      - ./backend/data.json:/app/data.json
+
+  # Saferr Parent Web Dashboard
+  saferr-dashboard:
+    build:
+      context: ./parent-dashboard
+      dockerfile: Dockerfile
+      args:
+        # Replace with your production Cloudflare API subdomain, e.g. https://api.yourdomain.com
+        - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:4000}
+    container_name: saferr-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - saferr-backend
+
+  # Optional Cloudflare Tunnel Service (Auto-connect to Cloudflare Zero Trust)
+  # Uncomment if you want Docker to run the Cloudflare tunnel automatically:
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: saferr-cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel run
+  #   environment:
+  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - saferr-backend
+  #     - saferr-dashboard

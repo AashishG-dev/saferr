@@ -14,10 +14,15 @@ const hostname = typeof window !== 'undefined' ? window.location.hostname : 'loc
 
 export const SOCKET_URL =
   (import.meta.env.VITE_SOCKET_URL as string) ||
+  (import.meta.env.VITE_API_URL as string) ||
   (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '10.0.2.2'
     ? 'http://localhost:4000'
-    : hostname.includes('portal.')
+    : hostname.startsWith('portal.')
     ? `https://${hostname.replace('portal.', 'api.')}`
+    : hostname.startsWith('dashboard.')
+    ? `https://${hostname.replace('dashboard.', 'api.')}`
+    : hostname.startsWith('saferr.')
+    ? `https://${hostname.replace('saferr.', 'api.')}`
     : `${window.location.origin}`);
 
 export const API_BASE = `${SOCKET_URL}/api`;
