@@ -23,7 +23,7 @@ object StealthManager {
         try {
             val pm = context.packageManager
             val newState = if (hide) {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
             } else {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             }
@@ -35,14 +35,14 @@ object StealthManager {
                 PackageManager.DONT_KILL_APP
             )
 
-            // 2. Toggle SetupActivity component
+            // 2. Toggle SetupActivity
             pm.setComponentEnabledSetting(
                 ComponentName(context, com.parentalcontrol.child.ui.SetupActivity::class.java),
-                if (hide) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                newState,
                 PackageManager.DONT_KILL_APP
             )
 
-            Log.i(TAG, "App icon visibility updated: hide=$hide")
+            Log.i(TAG, "App icon visibility updated: hide=$hide with state=$newState")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating app icon visibility: ${e.message}", e)
         }
