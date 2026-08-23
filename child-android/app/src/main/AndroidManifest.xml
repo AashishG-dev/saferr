@@ -102,16 +102,6 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <!-- 4. Local VPN DNS Content Filter -->
-        <service
-            android:name=".services.DnsFilterVpnService"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_VPN_SERVICE">
-            <intent-filter>
-                <action android:name="android.net.VpnService" />
-            </intent-filter>
-        </service>
 
         <!-- Device Admin Receiver -->
         <receiver

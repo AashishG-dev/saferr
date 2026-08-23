@@ -49,7 +49,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               { id: 'overview', label: 'Overview' },
               { id: 'screentime', label: 'Screen Time' },
               { id: 'location', label: 'Location Map' },
-              { id: 'webfilter', label: 'Web Filter' },
               { id: 'live', label: 'Live Monitor' }
             ].map((tab) => (
               <button
@@ -116,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Navigation Tabs */}
         <div className="flex md:hidden items-center justify-around py-2 border-t border-slate-800/80 overflow-x-auto gap-2">
-          {['overview', 'screentime', 'location', 'webfilter', 'live'].map((tab) => (
+          {['overview', 'screentime', 'location', 'live'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

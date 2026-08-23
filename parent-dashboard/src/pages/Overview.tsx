@@ -98,7 +98,7 @@ export const Overview: React.FC<OverviewProps> = ({
       </div>
 
       {/* Grid of Key Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         {/* 1. Screen Time Card */}
         <div
@@ -154,32 +154,7 @@ export const Overview: React.FC<OverviewProps> = ({
           </div>
         </div>
 
-        {/* 3. Safe Web Filter Card */}
-        <div
-          onClick={() => onNavigateTab('webfilter')}
-          className="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/40 p-5 rounded-2xl transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Web Filtering</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-white">{webFilter?.blockedDomains.length || 0}</span>
-              <span className="text-xs text-slate-500">Domains Blocked</span>
-            </div>
-            <p className="text-xs text-indigo-400 font-semibold mt-2">
-              DNS Shield Active • {webFilter?.blockedCategories.length || 0} Categories
-            </p>
-            <div className="mt-3 flex items-center text-xs text-indigo-400 font-semibold group-hover:underline">
-              Manage Filters <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Live Monitor & Camera Stream */}
+        {/* 3. Live Monitor & Camera Stream */}
         <div
           onClick={() => onNavigateTab('live')}
           className="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/40 p-5 rounded-2xl transition-all cursor-pointer group"

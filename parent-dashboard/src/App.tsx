@@ -3,7 +3,6 @@ import { Navbar } from './components/Navbar';
 import { Overview } from './pages/Overview';
 import { ScreenTimeView } from './pages/ScreenTimeView';
 import { LocationTrackerView } from './pages/LocationTrackerView';
-import { WebFilterView } from './pages/WebFilterView';
 import { LiveMonitorView } from './pages/LiveMonitorView';
 import { PairingModal } from './pages/PairingModal';
 import { api, getSocket } from './lib/api';
@@ -268,13 +267,6 @@ export function App() {
                 accuracy: 5
               });
             }}
-          />
-        )}
-
-        {activeTab === 'webfilter' && webFilter && (
-          <WebFilterView
-            policy={webFilter}
-            onSavePolicy={handleSaveWebFilter}
           />
         )}
 

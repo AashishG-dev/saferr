@@ -81,28 +81,12 @@
             android:text="3. Grant Display Over Other Apps" />
 
         <Button
-            android:id="@+id/btnEnableVpn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#334155"
-            android:text="4. Enable Safe Web VPN Filter" />
-
-        <Button
             android:id="@+id/btnEnableAccessibility"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:backgroundTint="#334155"
-            android:text="5. Enable Silent Shield (Accessibility)" />
-
-        <Button
-            android:id="@+id/btnEnableScreenMirror"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#334155"
-            android:text="6. Enable Real-Time Screen Mirror" />
+            android:text="4. Enable Silent Shield (Accessibility)" />
 
         <Button
             android:id="@+id/btnCompleteSetup"
