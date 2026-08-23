@@ -25,8 +25,9 @@ object ScreenCaptureManager {
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
 
-    private var screenWidth = 720
-    private var screenHeight = 1280
+    private var screenWidth = 540
+    private var screenHeight = 960
+    private var screenDensity = 320
     @Volatile
     private var latestFrameBase64: String? = null
 
