@@ -28,22 +28,10 @@
         android:textSize="14sp" />
 
     <Button
-        android:id="@+id/btnEnableScreenCapture"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="#0284C7"
-        android:padding="16dp"
-        android:text="🎥 Enable Real-Time Screen Mirror"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold" />
-
-    <Button
         android:id="@+id/btnSos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:backgroundTint="#EF4444"
         android:padding="16dp"
         android:text="🚨 EMERGENCY SOS ALERT"
