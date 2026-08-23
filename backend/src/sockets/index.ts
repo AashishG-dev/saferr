@@ -82,8 +82,6 @@ export function setupSockets(io: Server) {
         triggeredBy: data.triggeredBy || 'manual'
       };
       store.addScreenshot(shot);
-      io.to(`parent:${targetId}`).emit('parent:screenshot_received', shot);
-      io.to(`parent:${data.deviceId}`).emit('parent:screenshot_received', shot);
       io.emit('parent:screenshot_received', shot);
     });
 
@@ -95,8 +93,6 @@ export function setupSockets(io: Server) {
         frame: data.frame,
         timestamp: Date.now()
       };
-      io.to(`parent:${targetId}`).emit('parent:screen_frame', payload);
-      io.to(`parent:${data.deviceId}`).emit('parent:screen_frame', payload);
       io.emit('parent:screen_frame', payload);
     });
 
@@ -113,28 +109,18 @@ export function setupSockets(io: Server) {
         metadata: data.metadata
       };
       store.addAlert(alert);
-      io.to(`parent:${targetId}`).emit('parent:new_alert', alert);
-      io.to(`parent:${data.deviceId}`).emit('parent:new_alert', alert);
+      io.emit('parent:new_alert', alert);
     });
 
     // ==========================================
     // PARENT COMMANDS TO CHILD
     // ==========================================
 
-    // Helper to send to child device across all ID aliases
+    // Helper to send to child device
     const emitToChild = (targetDevId: string, event: string, payload?: any) => {
       const dev = store.getDeviceById(targetDevId);
-      const rooms = new Set<string>([
-        `child:${targetDevId}`,
-        `device:${targetDevId}`
-      ]);
-      if (dev) {
-        rooms.add(`child:${dev.id}`);
-        rooms.add(`device:${dev.id}`);
-        rooms.add(`child:${dev.pairingCode}`);
-        rooms.add(`child:child-${dev.pairingCode}`);
-      }
-      rooms.forEach((r) => io.to(r).emit(event, payload));
+      const childRoom = dev ? `child:${dev.id}` : `child:${targetDevId}`;
+      io.to(childRoom).emit(event, payload);
     };
 
     // Command: Lock / Unlock device
