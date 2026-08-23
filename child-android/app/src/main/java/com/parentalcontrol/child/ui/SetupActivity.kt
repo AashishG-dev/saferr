@@ -40,7 +40,7 @@ class SetupActivity : AppCompatActivity() {
 
         // Prepopulate current configuration for fast testing
         val prefs = getSharedPreferences("parental_prefs", Context.MODE_PRIVATE)
-        etBackendUrl.setText(prefs.getString("backend_url", "https://api.yourdomain.com"))
+        etBackendUrl.setText(prefs.getString("backend_url", "https://api.cognifyztechnology.in"))
         etPairingCode.setText(prefs.getString("pairing_code", ""))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

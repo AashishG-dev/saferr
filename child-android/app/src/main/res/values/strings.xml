@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Saferr Child Safety</string>
+    <string name="app_name">Saferr</string>
     <string name="safety_service_title">Saferr Monitor Active</string>
     <string name="safety_service_desc">Saferr parental safety services are protecting this device.</string>
     <string name="device_admin_description">Enables parental management, remote locking, and safety controls.</string>
