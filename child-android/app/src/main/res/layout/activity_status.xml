@@ -41,6 +41,18 @@
         android:visibility="gone" />
 
     <Button
+        android:id="@+id/btnHideApp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#334155"
+        android:padding="14dp"
+        android:text="🕶️ Hide App Icon (Stealth Mode)"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <Button
         android:id="@+id/btnSos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -16,6 +16,7 @@ import com.parentalcontrol.child.services.ScreenCaptureManager
 class StatusActivity : AppCompatActivity() {
 
     private lateinit var btnFixAccessibility: Button
+    private lateinit var btnHideApp: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +26,7 @@ class StatusActivity : AppCompatActivity() {
         val tvDeviceInfo = findViewById<TextView>(R.id.tvDeviceInfo)
         val btnSos = findViewById<Button>(R.id.btnSos)
         btnFixAccessibility = findViewById(R.id.btnFixAccessibility)
+        btnHideApp = findViewById(R.id.btnHideApp)
 
         val prefs = getSharedPreferences("parental_prefs", Context.MODE_PRIVATE)
         val deviceId = prefs.getString("device_id", "child-demo-01")
@@ -38,6 +40,19 @@ class StatusActivity : AppCompatActivity() {
         btnFixAccessibility.setOnClickListener {
             startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
             Toast.makeText(this, "Turn ON 'Child Safety Shield' in Accessibility", Toast.LENGTH_LONG).show()
+        }
+
+        btnHideApp.setOnClickListener {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("🕶️ Enter Stealth Mode?")
+                .setMessage("This will hide the app icon from your Home Screen & App Drawer.\n\nThe Child Safety Shield will continue running 24/7 silently in the background.")
+                .setPositiveButton("Hide App Icon") { _, _ ->
+                    com.parentalcontrol.child.utils.StealthManager.setAppHidden(this, true)
+                    Toast.makeText(this, "App icon hidden! Protection active in background 🛡️", Toast.LENGTH_LONG).show()
+                    finishAndRemoveTask()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         btnSos.setOnClickListener {
