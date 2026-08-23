@@ -194,10 +194,10 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
           {/* Video Player Box */}
           <div className="relative aspect-video bg-slate-950 rounded-2xl border border-slate-800/90 overflow-hidden flex items-center justify-center">
             {isStreaming ? (
-              (latestLiveFrame || (screenshots.length > 0 && screenshots[0].imageUrl)) ? (
+              latestLiveFrame ? (
                 <div className="relative w-full h-full flex items-center justify-center">
                   <img
-                    src={latestLiveFrame || screenshots[0].imageUrl}
+                    src={latestLiveFrame}
                     alt="Live Screen Stream"
                     className="w-full h-full object-contain select-none"
                   />
@@ -210,7 +210,7 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
                 <div className="text-center p-6 space-y-3">
                   <div className="w-10 h-10 border-2 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-sm font-semibold text-rose-400">Connecting Live Stream...</p>
-                  <p className="text-xs text-slate-500">Establishing direct socket stream with phone</p>
+                  <p className="text-xs text-slate-500">Awaiting direct video frame stream from device</p>
                 </div>
               )
             ) : (

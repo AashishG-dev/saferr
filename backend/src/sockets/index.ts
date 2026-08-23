@@ -205,8 +205,6 @@ function captureRealDeviceScreen(): Promise<string | null> {
     // ==========================================
 
     // Track active live screen frame streamer per parent socket
-    const activeStreamTimers = new Map<string, NodeJS.Timeout>();
-
     // Parent initiates stream request (screen / camera_front / camera_back / microphone)
     socket.on('webrtc:request_stream', (data: { deviceId: string; mediaType: 'screen' | 'camera_front' | 'camera_back' | 'mic' }) => {
       console.log(`[Stream Request] Parent requested ${data.mediaType} stream for device ${data.deviceId}`);
@@ -214,37 +212,6 @@ function captureRealDeviceScreen(): Promise<string | null> {
         parentSocketId: socket.id,
         mediaType: data.mediaType
       });
-
-      // Clear any existing stream timer for this parent
-      if (activeStreamTimers.has(socket.id)) {
-        clearInterval(activeStreamTimers.get(socket.id)!);
-        activeStreamTimers.delete(socket.id);
-      }
-
-      // If screen stream requested, start high-speed screen frame mirror
-      if (data.mediaType === 'screen') {
-        let isGrabbing = false;
-        const timer = setInterval(async () => {
-          if (isGrabbing) return;
-          isGrabbing = true;
-          try {
-            const frameBase64 = await captureRealDeviceScreen();
-            if (frameBase64) {
-              socket.emit('parent:screen_frame', {
-                deviceId: data.deviceId,
-                frame: frameBase64,
-                timestamp: Date.now()
-              });
-            }
-          } catch (err) {
-            // drop frame on error
-          } finally {
-            isGrabbing = false;
-          }
-        }, 150);
-
-        activeStreamTimers.set(socket.id, timer);
-      }
     });
 
     // Stop stream request
