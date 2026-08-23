@@ -36,6 +36,9 @@ class StatusActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("parental_prefs", Context.MODE_PRIVATE)
         val deviceId = prefs.getString("device_id", "child-demo-01")
 
+        // Ensure Foreground Safety Service is running
+        com.parentalcontrol.child.services.ForegroundSafetyService.start(this)
+
         tvDeviceInfo.text = "Device ID: $deviceId\nProtected by Family Shield"
         tvStatus.text = "🛡️ Protection Active\nLocation, Screen Time & Safe Web enabled"
 
