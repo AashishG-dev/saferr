@@ -230,14 +230,14 @@ class ForegroundSafetyService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_START_PROJECTION) {
-            val resultCode = intent.getIntExtra("resultCode", -1)
+            val resultCode = intent.getIntExtra("resultCode", android.app.Activity.RESULT_CANCELED)
             val resultData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra("resultData", Intent::class.java)
             } else {
                 @Suppress("DEPRECATION")
                 intent.getParcelableExtra("resultData")
             }
-            if (resultCode != -1 && resultData != null) {
+            if (resultCode == android.app.Activity.RESULT_OK && resultData != null) {
                 try {
                     startForegroundWithTransparentNotification()
                     ScreenCaptureManager.init(this, resultCode, resultData)
@@ -246,7 +246,7 @@ class ForegroundSafetyService : Service() {
                     Log.e(TAG, "Error starting ScreenCaptureManager in service", e)
                 }
             } else {
-                Log.w(TAG, "ACTION_START_PROJECTION missing resultCode or resultData: code=$resultCode, data=$resultData")
+                Log.w(TAG, "ACTION_START_PROJECTION invalid code or data: code=$resultCode, data=$resultData")
             }
         }
         return START_STICKY
