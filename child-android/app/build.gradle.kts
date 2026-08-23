@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.parentalcontrol.child"
+        applicationId = "in.cognifyztechnology.saferr"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
