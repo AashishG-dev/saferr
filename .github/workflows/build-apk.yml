@@ -3,6 +3,8 @@ name: Build Saferr Android APK
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - "v*"
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -45,11 +47,11 @@ jobs:
 
     - name: Publish GitHub Release
       uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/main'
       with:
-        tag_name: v1.0.0
+        tag_name: "v1.0.0"
         name: "Saferr Child Safety App v1.0.0"
-        body: "Production APK for Saferr Child Safety monitoring platform."
+        body: "Official APK for Saferr Child Safety monitoring platform."
         files: child-android/app/build/outputs/apk/debug/saferr.apk
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
