@@ -197,6 +197,17 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
     };
   }, [socket, deviceId]);
 
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const handleCaptureClick = async () => {
+    if (isCapturing) return;
+    setIsCapturing(true);
+    onRequestScreenshot();
+    setTimeout(() => {
+      setIsCapturing(false);
+    }, 2500);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -213,11 +224,21 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
 
         {/* Remote Screenshot Button */}
         <button
-          onClick={onRequestScreenshot}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 transition-all cursor-pointer"
+          onClick={handleCaptureClick}
+          disabled={isCapturing}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 transition-all cursor-pointer"
         >
-          <Camera className="w-4 h-4" />
-          Capture Remote Screenshot
+          {isCapturing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Capturing Screen...
+            </>
+          ) : (
+            <>
+              <Camera className="w-4 h-4" />
+              Capture Remote Screenshot
+            </>
+          )}
         </button>
       </div>
 
