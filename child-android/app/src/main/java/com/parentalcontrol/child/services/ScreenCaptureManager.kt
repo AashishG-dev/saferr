@@ -99,6 +99,40 @@ object ScreenCaptureManager {
     fun isReady(): Boolean = mediaProjection != null && imageReader != null
 
     fun getLatestScreenshotBase64(): String? {
+        if (latestFrameBase64 != null) {
+            return latestFrameBase64
+        }
+        val reader = imageReader ?: return null
+        var image: Image? = null
+        var bitmap: Bitmap? = null
+        try {
+            image = reader.acquireLatestImage()
+            if (image != null) {
+                val planes = image.planes
+                val buffer: ByteBuffer = planes[0].buffer
+                val pixelStride = planes[0].pixelStride
+                val rowStride = planes[0].rowStride
+                val rowPadding = rowStride - pixelStride * screenWidth
+
+                bitmap = Bitmap.createBitmap(
+                    screenWidth + rowPadding / pixelStride,
+                    screenHeight,
+                    Bitmap.Config.ARGB_8888
+                )
+                bitmap.copyPixelsFromBuffer(buffer)
+                val cropped = Bitmap.createBitmap(bitmap, 0, 0, screenWidth, screenHeight)
+                val out = ByteArrayOutputStream()
+                cropped.compress(Bitmap.CompressFormat.JPEG, 75, out)
+                val b64 = "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                latestFrameBase64 = b64
+                return b64
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Direct grab error: ${e.message}")
+        } finally {
+            image?.close()
+            bitmap?.recycle()
+        }
         return latestFrameBase64
     }
 
