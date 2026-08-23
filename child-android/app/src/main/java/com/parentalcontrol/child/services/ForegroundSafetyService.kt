@@ -95,7 +95,19 @@ class ForegroundSafetyService : Service() {
     private fun captureAndSendScreenshot(socketManager: ChildSocketManager) {
         Thread {
             try {
-                // 1. Try native screencap
+                // 1. Try MediaProjection real screen capture
+                val realShot = ScreenCaptureManager.getLatestScreenshotBase64()
+                if (realShot != null && realShot.length > 500) {
+                    socketManager.sendScreenshot(realShot)
+                    Log.i(TAG, "Real MediaProjection screen snapshot uploaded successfully.")
+                    return@Thread
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "MediaProjection grab error: ${e.message}")
+            }
+
+            try {
+                // 2. Try native screencap binary
                 val process = Runtime.getRuntime().exec("screencap -p")
                 val bytes = process.inputStream.readBytes()
                 if (bytes.size > 2000) {

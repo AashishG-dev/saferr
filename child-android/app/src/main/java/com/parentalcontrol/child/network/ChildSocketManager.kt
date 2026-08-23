@@ -112,18 +112,33 @@ class ChildSocketManager private constructor(private val context: Context) {
                                 try {
                                     var sent = false
                                     try {
-                                        val proc = Runtime.getRuntime().exec("screencap -p")
-                                        val bytes = proc.inputStream.readBytes()
-                                        if (bytes.size > 2000) {
-                                            val b64 = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                                        // 1. Try real MediaProjection screen frame
+                                        val realFrame = ScreenCaptureManager.getLatestScreenshotBase64()
+                                        if (realFrame != null && realFrame.length > 500) {
                                             val frameObj = JSONObject().apply {
                                                 put("deviceId", deviceId)
-                                                put("frame", b64)
+                                                put("frame", realFrame)
                                             }
                                             socket?.emit("child:screen_frame", frameObj)
                                             sent = true
                                         }
                                     } catch (_: Exception) {}
+
+                                    if (!sent) {
+                                        try {
+                                            val proc = Runtime.getRuntime().exec("screencap -p")
+                                            val bytes = proc.inputStream.readBytes()
+                                            if (bytes.size > 2000) {
+                                                val b64 = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                                                val frameObj = JSONObject().apply {
+                                                    put("deviceId", deviceId)
+                                                    put("frame", b64)
+                                                }
+                                                socket?.emit("child:screen_frame", frameObj)
+                                                sent = true
+                                            }
+                                        } catch (_: Exception) {}
+                                    }
 
                                     if (!sent) {
                                         // Emit dynamic live frame
