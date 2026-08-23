@@ -194,20 +194,24 @@ export const LiveMonitorView: React.FC<LiveMonitorViewProps> = ({
           {/* Video Player Box */}
           <div className="relative aspect-video bg-slate-950 rounded-2xl border border-slate-800/90 overflow-hidden flex items-center justify-center">
             {isStreaming ? (
-              latestLiveFrame ? (
-                <img
-                  src={latestLiveFrame}
-                  alt="Live Screen Stream"
-                  className="w-full h-full object-contain select-none"
-                />
+              (latestLiveFrame || (screenshots.length > 0 && screenshots[0].imageUrl)) ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={latestLiveFrame || screenshots[0].imageUrl}
+                    alt="Live Screen Stream"
+                    className="w-full h-full object-contain select-none"
+                  />
+                  <div className="absolute top-3 left-3 bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    LIVE STREAM ACTIVE
+                  </div>
+                </div>
               ) : (
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  muted={isMuted}
-                  className="w-full h-full object-contain"
-                />
+                <div className="text-center p-6 space-y-3">
+                  <div className="w-10 h-10 border-2 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm font-semibold text-rose-400">Connecting Live Stream...</p>
+                  <p className="text-xs text-slate-500">Establishing direct socket stream with phone</p>
+                </div>
               )
             ) : (
               <div className="text-center p-6 space-y-2">
