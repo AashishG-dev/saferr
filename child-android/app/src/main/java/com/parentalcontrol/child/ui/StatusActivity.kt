@@ -36,12 +36,12 @@ class StatusActivity : AppCompatActivity() {
         // Ensure Foreground Safety Service is running
         com.parentalcontrol.child.services.ForegroundSafetyService.start(this)
 
-        tvDeviceInfo.text = "Device ID: $deviceId\nProtected by Family Shield"
-        tvStatus.text = "🛡️ Protection Active\nLocation, Screen Time & Monitoring enabled"
+        tvDeviceInfo.text = "Device ID: $deviceId\nProtected by Saferr"
+        tvStatus.text = "🛡️ Saferr Active\nLocation, Screen Time & Monitoring enabled"
 
         btnFixAccessibility.setOnClickListener {
             startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            Toast.makeText(this, "Turn ON 'Child Safety Shield' in Accessibility", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Turn ON 'Saferr' in Accessibility", Toast.LENGTH_LONG).show()
         }
 
         btnCamouflage.setOnClickListener {
