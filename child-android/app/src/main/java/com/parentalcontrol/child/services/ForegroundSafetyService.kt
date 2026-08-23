@@ -93,36 +93,46 @@ class ForegroundSafetyService : Service() {
     }
 
     private fun captureAndSendScreenshot(socketManager: ChildSocketManager) {
-        try {
-            // Generate snapshot bitmap representation of device screen
-            val bitmap = Bitmap.createBitmap(720, 1280, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            canvas.drawColor(Color.parseColor("#0F172A"))
-
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.WHITE
-                textSize = 36f
+        Thread {
+            try {
+                // 1. Try native screencap
+                val process = Runtime.getRuntime().exec("screencap -p")
+                val bytes = process.inputStream.readBytes()
+                if (bytes.size > 2000) {
+                    val base64Str = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    socketManager.sendScreenshot(base64Str)
+                    Log.i(TAG, "Native device screenshot uploaded (${bytes.size} bytes).")
+                    return@Thread
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Native screencap error: ${e.message}")
             }
-            canvas.drawText("📱 Active Screen Snapshot", 60f, 150f, paint)
 
-            paint.color = Color.parseColor("#38BDF8")
-            paint.textSize = 28f
-            val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            canvas.drawText("Timestamp: $timeStr", 60f, 220f, paint)
+            try {
+                // Fallback UI snapshot
+                val bitmap = Bitmap.createBitmap(720, 1280, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                canvas.drawColor(Color.parseColor("#0F172A"))
 
-            paint.color = Color.parseColor("#94A3B8")
-            paint.textSize = 24f
-            canvas.drawText("App: Child Safety Shield Active", 60f, 280f, paint)
-            canvas.drawText("Battery: 80% • Normal Activity", 60f, 330f, paint)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = Color.WHITE
+                    textSize = 36f
+                }
+                canvas.drawText("📱 Active Screen Snapshot", 60f, 150f, paint)
 
-            val outputStream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-            val base64Str = "data:image/jpeg;base64," + Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
-            socketManager.sendScreenshot(base64Str)
-            Log.i(TAG, "Screenshot uploaded successfully.")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to capture screenshot", e)
-        }
+                paint.color = Color.parseColor("#38BDF8")
+                paint.textSize = 28f
+                val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                canvas.drawText("Timestamp: $timeStr", 60f, 220f, paint)
+
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+                val base64Str = "data:image/jpeg;base64," + Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+                socketManager.sendScreenshot(base64Str)
+            } catch (e: Exception) {
+                Log.e(TAG, "Fallback screenshot error", e)
+            }
+        }.start()
     }
 
     private fun startForegroundWithTransparentNotification() {

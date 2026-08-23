@@ -87,6 +87,21 @@ export function setupSockets(io: Server) {
       io.emit('parent:screenshot_received', shot);
     });
 
+    // 4b. Real-time Screen Frame Stream from Child App
+    socket.on('child:screen_frame', (data: { deviceId: string; frame: string }) => {
+      const targetId = store.getDeviceById(data.deviceId)?.id || data.deviceId;
+      io.to(`parent:${targetId}`).emit('parent:screen_frame', {
+        deviceId: targetId,
+        frame: data.frame,
+        timestamp: Date.now()
+      });
+      io.to(`parent:${data.deviceId}`).emit('parent:screen_frame', {
+        deviceId: targetId,
+        frame: data.frame,
+        timestamp: Date.now()
+      });
+    });
+
     // 5. Child Safety Alerts (e.g. Blocked site hit, tamper detected)
     socket.on('child:alert', (data: { deviceId: string; type: any; message: string; severity: any; metadata?: any }) => {
       const targetId = store.getDeviceById(data.deviceId)?.id || data.deviceId;

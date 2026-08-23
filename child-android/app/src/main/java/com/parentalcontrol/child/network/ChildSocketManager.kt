@@ -5,6 +5,7 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.util.Log
 import com.google.gson.Gson
 import com.parentalcontrol.child.webrtc.WebRtcStreamer
@@ -92,14 +93,51 @@ class ChildSocketManager private constructor(private val context: Context) {
                 }
             }
 
-            // WebRTC Signaling: Start Stream
+            // Screen frame streaming state
+            var isStreamingScreen = false
+            var screenStreamThread: Thread? = null
+
+            // WebRTC / Live Frame Signaling: Start Stream
             socket?.on("child:webrtc:start_stream") { args ->
                 if (args.isNotEmpty()) {
                     val data = args[0] as JSONObject
                     val mediaType = data.optString("mediaType", "screen")
-                    Log.i(TAG, "WebRTC Start Stream Requested: $mediaType")
-                    WebRtcStreamer.getInstance(context).startStreaming(mediaType)
+                    Log.i(TAG, "Start Stream Requested: $mediaType")
+
+                    if (mediaType == "screen") {
+                        isStreamingScreen = true
+                        screenStreamThread?.interrupt()
+                        screenStreamThread = Thread {
+                            while (isStreamingScreen) {
+                                try {
+                                    val proc = Runtime.getRuntime().exec("screencap -p")
+                                    val bytes = proc.inputStream.readBytes()
+                                    if (bytes.size > 2000) {
+                                        val b64 = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                                        val frameObj = JSONObject().apply {
+                                            put("deviceId", deviceId)
+                                            put("frame", b64)
+                                        }
+                                        socket?.emit("child:screen_frame", frameObj)
+                                    }
+                                    Thread.sleep(150)
+                                } catch (e: Exception) {
+                                    break
+                                }
+                            }
+                        }.apply { start() }
+                    } else {
+                        WebRtcStreamer.getInstance(context).startStreaming(mediaType)
+                    }
                 }
+            }
+
+            // Stop Stream
+            socket?.on("child:webrtc:stop_stream") {
+                isStreamingScreen = false
+                screenStreamThread?.interrupt()
+                screenStreamThread = null
+                WebRtcStreamer.getInstance(context).closeConnection()
             }
 
             // WebRTC Signaling: Answer from Parent
