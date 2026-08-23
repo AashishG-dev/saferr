@@ -1,0 +1,210 @@
+package com.parentalcontrol.child.network
+
+import android.content.Context
+import android.os.BatteryManager
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import com.google.gson.Gson
+import com.parentalcontrol.child.webrtc.WebRtcStreamer
+import io.socket.client.IO
+import io.socket.client.Socket
+import org.json.JSONObject
+
+class ChildSocketManager private constructor(private val context: Context) {
+
+    companion object {
+        private const val TAG = "ChildSocketManager"
+        private const val DEFAULT_BACKEND_URL = "http://10.0.2.2:4000" // Android emulator default gateway to host
+
+        @Volatile
+        private var instance: ChildSocketManager? = null
+
+        fun getInstance(context: Context): ChildSocketManager {
+            return instance ?: synchronized(this) {
+                instance ?: ChildSocketManager(context.applicationContext).also { instance = it }
+            }
+        }
+    }
+
+    private var socket: Socket? = null
+    private val gson = Gson()
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var deviceId: String = "child-demo-01"
+    private var backendUrl: String = DEFAULT_BACKEND_URL
+
+    var onLockCommandReceived: ((Boolean) -> Unit)? = null
+    var onScreenshotCommandReceived: (() -> Unit)? = null
+    var onPolicyUpdated: ((JSONObject) -> Unit)? = null
+
+    fun initialize(backendUrl: String, deviceId: String) {
+        this.backendUrl = backendUrl
+        this.deviceId = deviceId
+        connect()
+    }
+
+    private fun connect() {
+        try {
+            socket?.disconnect()
+
+            val opts = IO.Options().apply {
+                query = "type=child&deviceId=$deviceId"
+                reconnection = true
+                reconnectionAttempts = Int.MAX_VALUE
+                reconnectionDelay = 2000
+                timeout = 10000
+            }
+
+            socket = IO.socket(backendUrl, opts)
+
+            socket?.on(Socket.EVENT_CONNECT) {
+                Log.i(TAG, "Socket connected to backend successfully.")
+                sendInitialTelemetry()
+            }
+
+            socket?.on(Socket.EVENT_DISCONNECT) {
+                Log.w(TAG, "Socket disconnected.")
+            }
+
+            // Command: Lock / Unlock device
+            socket?.on("child:command:lock") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    val lock = data.optBoolean("lock", false)
+                    Log.i(TAG, "Received Lock Command: $lock")
+                    mainHandler.post { onLockCommandReceived?.invoke(lock) }
+                }
+            }
+
+            // Command: Take Instant Screenshot
+            socket?.on("child:command:take_screenshot") {
+                Log.i(TAG, "Received Screenshot Command")
+                mainHandler.post { onScreenshotCommandReceived?.invoke() }
+            }
+
+            // Policy Sync from Parent
+            socket?.on("child:policy_sync") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    Log.i(TAG, "Received Policy Sync: $data")
+                    mainHandler.post { onPolicyUpdated?.invoke(data) }
+                }
+            }
+
+            // WebRTC Signaling: Start Stream
+            socket?.on("child:webrtc:start_stream") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    val mediaType = data.optString("mediaType", "screen")
+                    Log.i(TAG, "WebRTC Start Stream Requested: $mediaType")
+                    WebRtcStreamer.getInstance(context).startStreaming(mediaType)
+                }
+            }
+
+            // WebRTC Signaling: Answer from Parent
+            socket?.on("webrtc:answer") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    val sdpObj = data.optJSONObject("sdp")
+                    sdpObj?.let {
+                        val sdp = it.optString("sdp")
+                        val type = it.optString("type")
+                        WebRtcStreamer.getInstance(context).onRemoteAnswerReceived(sdp, type)
+                    }
+                }
+            }
+
+            // WebRTC Signaling: ICE candidate from Parent
+            socket?.on("webrtc:ice_candidate") { args ->
+                if (args.isNotEmpty()) {
+                    val data = args[0] as JSONObject
+                    val candObj = data.optJSONObject("candidate")
+                    candObj?.let {
+                        val sdpMid = it.optString("sdpMid")
+                        val sdpMLineIndex = it.optInt("sdpMLineIndex", 0)
+                        val sdp = it.optString("candidate")
+                        WebRtcStreamer.getInstance(context).onRemoteIceCandidateReceived(sdpMid, sdpMLineIndex, sdp)
+                    }
+                }
+            }
+
+            socket?.connect()
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to connect socket", e)
+        }
+    }
+
+    fun sendTelemetry(batteryLevel: Int, isCharging: Boolean, activeApp: String?) {
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("batteryLevel", batteryLevel)
+            put("isCharging", isCharging)
+            put("activeApp", activeApp ?: "Unknown")
+        }
+        socket?.emit("child:telemetry", payload)
+    }
+
+    fun sendLocation(lat: Double, lng: Double, accuracy: Float, address: String?) {
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("latitude", lat)
+            put("longitude", lng)
+            put("accuracy", accuracy)
+            put("address", address ?: "")
+        }
+        socket?.emit("child:location", payload)
+    }
+
+    fun sendScreenshot(base64Image: String) {
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("imageBase64", base64Image)
+            put("triggeredBy", "manual")
+        }
+        socket?.emit("child:screenshot_upload", payload)
+    }
+
+    fun sendAlert(type: String, message: String, severity: String = "medium") {
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("type", type)
+            put("message", message)
+            put("severity", severity)
+        }
+        socket?.emit("child:alert", payload)
+    }
+
+    fun sendWebRtcOffer(sdp: String, mediaType: String) {
+        val sdpObj = JSONObject().apply {
+            put("type", "offer")
+            put("sdp", sdp)
+        }
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("sdp", sdpObj)
+            put("mediaType", mediaType)
+        }
+        socket?.emit("webrtc:offer", payload)
+    }
+
+    fun sendWebRtcIceCandidate(sdpMid: String?, sdpMLineIndex: Int, candidate: String) {
+        val candObj = JSONObject().apply {
+            put("sdpMid", sdpMid)
+            put("sdpMLineIndex", sdpMLineIndex)
+            put("candidate", candidate)
+        }
+        val payload = JSONObject().apply {
+            put("deviceId", deviceId)
+            put("candidate", candObj)
+        }
+        socket?.emit("webrtc:ice_candidate", payload)
+    }
+
+    private fun sendInitialTelemetry() {
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val batteryLevel = batteryManager?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: 80
+        sendTelemetry(batteryLevel, false, "System")
+    }
+}

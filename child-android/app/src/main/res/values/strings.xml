@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Child Safety Shield</string>
+    <string name="safety_service_title">Child Safety Monitor Active</string>
+    <string name="safety_service_desc">Parental protection and safety services are running.</string>
+    <string name="device_admin_description">Enables parental management, remote locking, and safety controls.</string>
+    <string name="vpn_service_label">Safe Web DNS Filter</string>
+</resources>
