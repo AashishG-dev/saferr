@@ -218,10 +218,6 @@ function captureRealDeviceScreen(): Promise<string | null> {
     socket.on('webrtc:stop_stream', (data: { deviceId: string }) => {
       console.log(`[Stream Stopped] Parent stopped stream for device ${data.deviceId}`);
       emitToChild(data.deviceId, 'child:webrtc:stop_stream');
-      if (activeStreamTimers.has(socket.id)) {
-        clearInterval(activeStreamTimers.get(socket.id)!);
-        activeStreamTimers.delete(socket.id);
-      }
     });
 
     // WebRTC Offer Relay (from child/sender to parent/receiver or vice-versa)
@@ -254,10 +250,6 @@ function captureRealDeviceScreen(): Promise<string | null> {
     // Disconnect
     socket.on('disconnect', () => {
       console.log(`[Socket Disconnected] ${socket.id}`);
-      if (activeStreamTimers.has(socket.id)) {
-        clearInterval(activeStreamTimers.get(socket.id)!);
-        activeStreamTimers.delete(socket.id);
-      }
       if (deviceId && clientType === 'child') {
         store.updateDevice(deviceId, { status: 'offline', lastSeen: new Date().toISOString() });
         io.to(`parent:${deviceId}`).emit('device:status', { deviceId, status: 'offline' });
