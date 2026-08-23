@@ -28,8 +28,6 @@ class ScreenTimeMonitorService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var dailyLimitMinutes = 120
-    private var bedtimeStart = "21:30"
-    private var bedtimeEnd = "07:00"
     private var blockedApps = mutableSetOf<String>()
     private var isManuallyLocked = false
 
@@ -49,8 +47,6 @@ class ScreenTimeMonitorService : Service() {
             val screenTime = json.optJSONObject("screenTime")
             if (screenTime != null) {
                 dailyLimitMinutes = screenTime.optInt("dailyLimitMinutes", 120)
-                bedtimeStart = screenTime.optString("bedtimeStart", "21:30")
-                bedtimeEnd = screenTime.optString("bedtimeEnd", "07:00")
                 isManuallyLocked = screenTime.optBoolean("isLocked", false)
 
                 val blockedArray = screenTime.optJSONArray("blockedApps")
@@ -80,11 +76,6 @@ class ScreenTimeMonitorService : Service() {
             return
         }
 
-        if (isBedtime()) {
-            triggerLockOverlay("Bedtime hours in effect. Goodnight!")
-            return
-        }
-
         val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return
         val time = System.currentTimeMillis()
         val events = usageStatsManager.queryEvents(time - 10000, time)
@@ -103,27 +94,6 @@ class ScreenTimeMonitorService : Service() {
                 triggerLockOverlay("This app is restricted by parental controls.")
             }
         }
-    }
-
-    private fun isBedtime(): Boolean {
-        try {
-            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val nowStr = sdf.format(Date())
-            val now = sdf.parse(nowStr)
-            val start = sdf.parse(bedtimeStart)
-            val end = sdf.parse(bedtimeEnd)
-
-            if (start != null && end != null && now != null) {
-                return if (start.after(end)) {
-                    now.after(start) || now.before(end)
-                } else {
-                    now.after(start) && now.before(end)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking bedtime", e)
-        }
-        return false
     }
 
     private fun triggerLockOverlay(reason: String) {

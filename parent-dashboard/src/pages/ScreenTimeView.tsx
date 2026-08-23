@@ -21,8 +21,6 @@ const COMMON_APPS = [
 
 export const ScreenTimeView: React.FC<ScreenTimeViewProps> = ({ policy, appUsages, onSavePolicy }) => {
   const [dailyLimitMinutes, setDailyLimitMinutes] = useState(policy.dailyLimitMinutes);
-  const [bedtimeStart, setBedtimeStart] = useState(policy.bedtimeStart);
-  const [bedtimeEnd, setBedtimeEnd] = useState(policy.bedtimeEnd);
   const [blockedApps, setBlockedApps] = useState<string[]>(policy.blockedApps || []);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -37,8 +35,6 @@ export const ScreenTimeView: React.FC<ScreenTimeViewProps> = ({ policy, appUsage
   const handleSave = () => {
     onSavePolicy({
       dailyLimitMinutes,
-      bedtimeStart,
-      bedtimeEnd,
       blockedApps
     });
     setSavedSuccess(true);
@@ -55,7 +51,7 @@ export const ScreenTimeView: React.FC<ScreenTimeViewProps> = ({ policy, appUsage
             Screen Time &amp; App Controls
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Enforce daily time limits, scheduled bedtime lockouts, and restrict distracting apps.
+            Enforce daily time limits and restrict distracting apps.
           </p>
         </div>
 
@@ -68,85 +64,40 @@ export const ScreenTimeView: React.FC<ScreenTimeViewProps> = ({ policy, appUsage
         </button>
       </div>
 
-      {/* Settings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* 1. Daily Screen Time Budget */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-sky-400" />
-              Daily Time Budget
-            </h3>
-            <span className="text-base font-black text-sky-400">
-              {Math.floor(dailyLimitMinutes / 60)}h {dailyLimitMinutes % 60}m
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-400">
-            Total device usage permitted each day before lock overlay activates.
-          </p>
-
-          <input
-            type="range"
-            min="30"
-            max="480"
-            step="15"
-            value={dailyLimitMinutes}
-            onChange={(e) => setDailyLimitMinutes(Number(e.target.value))}
-            className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
-          />
-
-          <div className="flex justify-between text-[11px] text-slate-500 font-mono">
-            <span>30m</span>
-            <span>2h</span>
-            <span>4h</span>
-            <span>8h</span>
-          </div>
+      {/* Daily Screen Time Budget */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Clock className="w-4 h-4 text-sky-400" />
+            Daily Time Budget
+          </h3>
+          <span className="text-lg font-black text-sky-400">
+            {Math.floor(dailyLimitMinutes / 60)}h {dailyLimitMinutes % 60}m
+          </span>
         </div>
 
-        {/* 2. Bedtime Lockout Schedule */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Moon className="w-4 h-4 text-indigo-400" />
-              Bedtime Downtime
-            </h3>
-            <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-semibold border border-indigo-500/20">
-              Active Every Night
-            </span>
-          </div>
+        <p className="text-xs text-slate-400">
+          Total device usage permitted each day before lock overlay activates.
+        </p>
 
-          <p className="text-xs text-slate-400">
-            Device locks automatically during these hours to ensure healthy sleep.
-          </p>
+        <input
+          type="range"
+          min="30"
+          max="480"
+          step="15"
+          value={dailyLimitMinutes}
+          onChange={(e) => setDailyLimitMinutes(Number(e.target.value))}
+          className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+        />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Start Lockout
-              </label>
-              <input
-                type="time"
-                value={bedtimeStart}
-                onChange={(e) => setBedtimeStart(e.target.value)}
-                className="mt-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 font-mono"
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                End Lockout
-              </label>
-              <input
-                type="time"
-                value={bedtimeEnd}
-                onChange={(e) => setBedtimeEnd(e.target.value)}
-                className="mt-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 font-mono"
-              />
-            </div>
-          </div>
+        <div className="flex justify-between text-xs text-slate-500 font-mono">
+          <span>30m</span>
+          <span>1h</span>
+          <span>2h</span>
+          <span>4h</span>
+          <span>6h</span>
+          <span>8h</span>
         </div>
-
       </div>
 
       {/* App Restriction Management */}
