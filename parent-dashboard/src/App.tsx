@@ -205,15 +205,48 @@ export function App() {
     }
   };
 
+  // Delete Child Device
+  const handleDeleteDevice = async (device: ChildDevice) => {
+    if (!window.confirm(`Are you sure you want to delete "${device.name}"? This will remove all logs, screen time rules, and screenshots.`)) {
+      return;
+    }
+    try {
+      await api.deleteDevice(device.id);
+      const remaining = devices.filter((d) => d.id !== device.id);
+      setDevices(remaining);
+      setSelectedDevice(remaining.length > 0 ? remaining[0] : null);
+    } catch (e) {
+      console.error('Failed to delete device:', e);
+    }
+  };
+
   if (!selectedDevice) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center mx-auto text-sky-400 animate-spin">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="w-16 h-16 rounded-3xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mx-auto text-3xl">
             🛡️
           </div>
-          <h2 className="text-lg font-bold text-white">Connecting to FamilyShield...</h2>
+          <h2 className="text-lg font-bold text-white">No Child Devices Configured</h2>
+          <p className="text-xs text-slate-400">Add and pair your first child device to begin protection.</p>
+          <button
+            onClick={() => setIsPairingOpen(true)}
+            className="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-500/20 transition-all cursor-pointer"
+          >
+            + Add Child Device
+          </button>
         </div>
+
+        {/* Pairing Modal */}
+        <PairingModal
+          isOpen={isPairingOpen}
+          onClose={() => setIsPairingOpen(false)}
+          onDevicePaired={(dev) => {
+            setDevices((prev) => [...prev, dev]);
+            setSelectedDevice(dev);
+            setIsPairingOpen(false);
+          }}
+        />
       </div>
     );
   }
@@ -226,6 +259,7 @@ export function App() {
         selectedDevice={selectedDevice}
         onSelectDevice={(d) => setSelectedDevice(d)}
         onToggleLock={handleToggleLock}
+        onDeleteDevice={handleDeleteDevice}
         onOpenPairing={() => setIsPairingOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}

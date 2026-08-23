@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Smartphone, Lock, Unlock, Plus, RefreshCw, AlertTriangle, Radio } from 'lucide-react';
+import { Shield, Smartphone, Lock, Unlock, Plus, RefreshCw, AlertTriangle, Radio, Trash2 } from 'lucide-react';
 import { ChildDevice } from '../types';
 
 interface NavbarProps {
@@ -7,6 +7,7 @@ interface NavbarProps {
   selectedDevice: ChildDevice | null;
   onSelectDevice: (device: ChildDevice) => void;
   onToggleLock: (device: ChildDevice) => void;
+  onDeleteDevice: (device: ChildDevice) => void;
   onOpenPairing: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedDevice,
   onSelectDevice,
   onToggleLock,
+  onDeleteDevice,
   onOpenPairing,
   activeTab,
   setActiveTab,
@@ -99,6 +101,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 {selectedDevice.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span className="hidden sm:inline">{selectedDevice.isLocked ? 'Locked' : 'Lock Phone'}</span>
+              </button>
+            )}
+
+            {/* Delete Child Button */}
+            {selectedDevice && (
+              <button
+                onClick={() => onDeleteDevice(selectedDevice)}
+                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 rounded-xl transition-all cursor-pointer"
+                title={`Delete ${selectedDevice.name}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
 

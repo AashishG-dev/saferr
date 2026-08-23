@@ -149,6 +149,27 @@ class DataStore {
     return device;
   }
 
+  deleteDevice(id: string): boolean {
+    const raw = id.replace(/^child-/, '');
+    const prevLen = this.data.devices.length;
+    this.data.devices = this.data.devices.filter(
+      (d) => d.id !== id && d.pairingCode !== id && d.pairingCode !== raw && d.id !== `child-${id}`
+    );
+    if (this.data.devices.length !== prevLen) {
+      delete this.data.screenTimePolicies[id];
+      delete this.data.screenTimePolicies[`child-${id}`];
+      delete this.data.webFilterPolicies[id];
+      delete this.data.webFilterPolicies[`child-${id}`];
+      this.data.locations = this.data.locations.filter((l) => l.deviceId !== id && l.deviceId !== `child-${id}`);
+      this.data.appUsage = this.data.appUsage.filter((u) => u.deviceId !== id && u.deviceId !== `child-${id}`);
+      this.data.screenshots = this.data.screenshots.filter((s) => s.deviceId !== id && s.deviceId !== `child-${id}`);
+      this.data.alerts = this.data.alerts.filter((a) => a.deviceId !== id && a.deviceId !== `child-${id}`);
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
   updateDevice(id: string, partial: Partial<ChildDevice>): ChildDevice | undefined {
     const dev = this.getDeviceById(id);
     if (!dev) return undefined;

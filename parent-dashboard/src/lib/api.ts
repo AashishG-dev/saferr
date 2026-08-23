@@ -54,6 +54,14 @@ export const api = {
     return json.data;
   },
 
+  async deleteDevice(deviceId: string): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/devices/${deviceId}`, {
+      method: 'DELETE'
+    });
+    const json = await res.json();
+    return json.success;
+  },
+
   // Screen Time
   async getScreenTime(deviceId: string): Promise<ScreenTimePolicy> {
     const res = await fetch(`${API_BASE}/devices/${deviceId}/screentime`);

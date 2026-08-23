@@ -9,6 +9,12 @@ apiRouter.get('/devices', (_req: Request, res: Response) => {
   res.json({ success: true, data: store.getDevices() });
 });
 
+apiRouter.delete('/devices/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const deleted = store.deleteDevice(id);
+  res.json({ success: deleted, message: deleted ? 'Device deleted' : 'Device not found' });
+});
+
 apiRouter.get('/screenshots', (req: Request, res: Response) => {
   const deviceId = req.query.deviceId as string;
   if (!deviceId) {
