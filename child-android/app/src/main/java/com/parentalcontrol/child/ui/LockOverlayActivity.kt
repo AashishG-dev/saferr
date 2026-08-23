@@ -1,13 +1,13 @@
 package com.parentalcontrol.child.ui
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import com.parentalcontrol.child.R
 
-class LockOverlayActivity : AppCompatActivity() {
+class LockOverlayActivity : Activity() {
 
     companion object {
         var currentInstance: LockOverlayActivity? = null
