@@ -191,7 +191,23 @@ class ForegroundSafetyService : Service() {
             .build()
 
         try {
-            startForeground(NOTIFICATION_ID, notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                    )
+                } catch (_: Exception) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    )
+                }
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error in startForeground", e)
         }
